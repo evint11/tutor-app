@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const User = require('../models/user');
 
 // Get all tutors
 router.get('/', async (req, res) => {
@@ -35,6 +35,8 @@ router.put('/:id', async (req, res) => {
             {
                 bio,
                 availability,
+
+            
                 subjects
             },
             { new: true } // Return the updated document
