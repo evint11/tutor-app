@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Profile - TutorConnect</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>My Profile</h1>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="tutors.html">Browse Tutors</a>
+      <a href="login.html" onclick="localStorage.clear()">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <section style="max-width: 600px; margin: 2rem auto;">
+      <h2>Edit Your Tutor Profile</h2>
+      <form id="profileForm">
+        <label for="bio">Bio:</label><br />
+        <textarea id="bio" rows="4" required></textarea><br /><br />
+
+        <label for="availability">Availability:</label><br />
+        <input type="text" id="availability" required /><br /><br />
+
+        <label for="subjects">Subjects (comma separated):</label><br />
+        <input type="text" id="subjects" required /><br /><br />
+
+        <button type="submit">Update Profile</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || user.role !== "tutor") {
+        alert("Access denied.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Prefill form with tutor data
+      const res = await fetch(`http://localhost:3000/api/tutors/${user._id}`);
+      const tutor = await res.json();
+      document.getElementById("bio").value = tutor.bio || "";
+      document.getElementById("availability").value = tutor.availability || "";
+      document.getElementById("subjects").value = tutor.subjects?.join(", ") || "";
+
+      // Submit updated data
+      const form = document.getElementById("profileForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const updatedTutor = {
+          bio: document.getElementById("bio").value,
+          availability: document.getElementById("availability").value,
+          subjects: document.getElementById("subjects").value.split(",").map(s => s.trim())
+        };
+
+        const res = await fetch(`http://localhost:3000/api/tutors/${user._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(updatedTutor)
+        });
+
+        if (res.ok) {
+          alert("Profile updated successfully!");
+        } else {
+          alert("Something went wrong.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

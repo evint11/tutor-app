@@ -1,0 +1,55 @@
+﻿<!-- register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - TutorConnect</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header>
+        <h1>Register</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <form id="registerForm">
+            <label for="name">Name:</label><br />
+            <input type="text" id="name" name="name" required /><br /><br />
+
+            <label for="email">Email:</label><br />
+            <input type="email" id="email" name="email" required /><br /><br />
+
+            <label for="password">Password:</label><br />
+            <input type="password" id="password" name="password" required /><br /><br />
+
+            <label for="role">I am a:</label><br />
+            <select id="role" name="role" required>
+                <option value="student">Student</option>
+                <option value="tutor">Tutor</option>
+            </select><br /><br />
+                <!-- Only visible to tutors -->
+            <div id="tutor-extra-fields" style="display: none;">
+             <label for="bio">Short Bio:</label><br />
+                <textarea id="bio" rows="3"></textarea><br /><br />
+
+             <label for="availability">Availability (e.g. Weekdays, Evenings):</label><br />
+             <input type="text" id="availability" /><br /><br />
+            </div>
+
+            
+            <label for="subjects">Subjects (comma separated):</label><br />
+            <input type="text" id="subjects" name="subjects" placeholder="e.g. Math, Physics" /><br /><br />
+
+
+            <button type="submit">Register</button>
+        </form>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

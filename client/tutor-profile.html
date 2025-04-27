@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tutor Profile - TutorConnect</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <header>
+        <h1>Tutor Profile</h1>
+        <nav>
+            <a href="tutors.html">Back to Tutors</a>
+        </nav>
+    </header>
+
+    <main>
+        <div id="profile-container">
+            <h2 id="tutor-name">Loading...</h2>
+            <p><strong>Email:</strong> <a id="tutor-email" href="#" target="_blank"></a></p>
+            <p><strong>Subjects:</strong> <span id="tutor-subjects"></span></p>
+            <p><strong>Bio:</strong> <span id="tutor-bio"></span></p>
+            <p><strong>Availability:</strong> <span id="tutor-availability"></span></p>
+            
+            <h3>Request a Session</h3>
+            <form id="bookingForm">
+                <label for="date">Date & Time:</label><br />
+                <input type="datetime-local" id="date" required /><br /><br />
+                <label for="message">Message:</label><br />
+                <textarea id="message" rows="4" required></textarea><br /><br />
+                <button type="submit">Send Request</button>
+            </form>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const params = new URLSearchParams(window.location.search);
+            const tutorId = params.get("id");
+
+            if (!tutorId) return;
+
+            const tutorRes = await fetch(`http://localhost:3000/api/tutors/${tutorId}`);
+            const tutor = await tutorRes.json();
+            console.log("Fetched tutor:", tutor);
+
+            const emailLink = document.getElementById("tutor-email");
+            emailLink.textContent = tutor.email;
+            emailLink.href = `mailto:${tutor.email}`;
+
+            document.getElementById("tutor-name").textContent = tutor.name;
+            document.getElementById("tutor-subjects").textContent = tutor.subjects.join(", ");
+
+            const bookingForm = document.getElementById("bookingForm");
+            bookingForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const user = JSON.parse(localStorage.getItem("user"));
+                if (!user) {
+                    alert("You must be logged in to book a session.");
+                    return;
+                }
+
+                const booking = {
+                    studentId: user._id,
+                    tutorId: tutor._id,
+                    date: document.getElementById("date").value,
+                    message: document.getElementById("message").value,
+                };
+
+                const res = await fetch("http://localhost:3000/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(booking),
+                });
+
+                if (res.ok) {
+                    alert("Session request sent!");
+                    bookingForm.reset();
+                } else {
+                    alert("Error sending request.");
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
