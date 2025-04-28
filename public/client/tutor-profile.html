@@ -9,7 +9,7 @@
     <header>
         <h1>Tutor Profile</h1>
         <nav>
-            <a href="tutors.html">Back to Tutors</a>
+            <a href="/tutors.html">Back to Tutors</a>
         </nav>
     </header>
 
@@ -34,16 +34,22 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
+            // Ensure user is logged in
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user) {
+                window.location.href = "/login.html";
+                return;
+            }
+
+            // Get tutor ID from query string
             const params = new URLSearchParams(window.location.search);
             const tutorId = params.get("id");
             if (!tutorId) return;
 
-            // Fetch tutor details from your API
+            // Fetch tutor details
             try {
                 const tutorRes = await fetch(`/api/tutors/${tutorId}`);
                 const tutor = await tutorRes.json();
-                console.log("Fetched tutor:", tutor);
-
                 document.getElementById("tutor-name").textContent = tutor.name;
                 document.getElementById("tutor-email").textContent = tutor.email;
                 document.getElementById("tutor-email").href = `mailto:${tutor.email}`;
@@ -58,8 +64,10 @@
             const bookingForm = document.getElementById("bookingForm");
             bookingForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
+                // Build booking object with studentId and tutorId
                 const booking = {
                     tutorId,
+                    studentId: user._id,
                     date: document.getElementById("date").value,
                     message: document.getElementById("message").value
                 };
@@ -72,7 +80,7 @@
                     });
                     if (res.ok) {
                         alert("Session request sent!");
-                        bookingForm.reset();
+                        window.location.href = "/dashboard.html";
                     } else {
                         const errorData = await res.json();
                         alert("Error sending request: " + (errorData.error || res.statusText));
