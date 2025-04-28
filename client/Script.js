@@ -1,4 +1,4 @@
-// script.js (UPDATED)
+// public/client/script.js
 
 document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("loginForm");
@@ -11,15 +11,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage = window.location.pathname;
     let allTutors = [];
 
-    // Dashboard protection
+    // === Dashboard Protection ===
     if (currentPage.includes("dashboard.html")) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
-            window.location.href = "login.html?redirect=dashboard";
+            window.location.href = "/login.html?redirect=dashboard";
         }
     }
 
-    // Dashboard bookings
+    // === Booking List on Dashboard ===
     const bookingList = document.getElementById("booking-list");
     if (bookingList) {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // Redirect message for login
+    // === Redirect Message on Login ===
     if (currentPage.includes("login.html")) {
         const params = new URLSearchParams(window.location.search);
         if (params.get("redirect") === "dashboard") {
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Login form
+    // === Login Handler ===
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await res.json();
                 if (res.ok) {
                     localStorage.setItem("user", JSON.stringify(data.user));
-                    window.location.href = "dashboard.html";
+                    window.location.href = "/dashboard.html";
                 } else {
                     alert("Login failed: " + data.error);
                 }
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Register form
+    // === Register Handler ===
     if (registerForm) {
         const roleSelect = document.getElementById("role");
         const extraFields = document.getElementById("tutor-extra-fields");
@@ -99,10 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
                 role: document.getElementById("role").value.toLowerCase(),
-                subjects: rawSubjects
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter((s) => s.length > 0),
+                subjects: rawSubjects.split(",").map((s) => s.trim()).filter((s) => s.length > 0),
                 bio: document.getElementById("bio")?.value || "",
                 availability: document.getElementById("availability")?.value || "",
             };
@@ -116,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await res.json();
                 if (res.ok) {
                     alert("Registered successfully!");
-                    window.location.href = "login.html";
+                    window.location.href = "/login.html";
                 } else {
                     alert("Error: " + data.error);
                 }
@@ -127,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Load tutors
+    // === Tutor Listing + Search ===
     async function loadTutors() {
         try {
             const res = await fetch("/api/tutors");
@@ -150,11 +147,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.classList.add("tutor-card");
             card.innerHTML = `
-            <h3>${tutor.name}</h3>
-            <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-            <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-            <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
-            <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
+                <h3>${tutor.name}</h3>
+                <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
+                <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+                <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
+                <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
             `;
             tutorList.appendChild(card);
         });
@@ -174,6 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (tutorList) loadTutors();
 
+    // === Dashboard Greeting ===
     if (welcomeMessage) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (user) {
@@ -185,10 +183,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // === Logout Button ===
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             localStorage.removeItem("user");
-            window.location.href = "login.html";
+            window.location.href = "/login.html";
         });
     }
+
 });
