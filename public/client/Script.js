@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage = window.location.pathname;
     let allTutors = [];
 
-    // === Dashboard Protection & Booking List ===
+    // === Dashboard Protection & Booking List & Edit Profile ===
     if (currentPage.includes("dashboard.html")) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
@@ -21,8 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Booking List
         const bookingList = document.getElementById("booking-list");
-        if (bookingList) {
-            (async () => {
+        (async () => {
+            if (bookingList) {
                 try {
                     const res = await fetch(`/api/bookings?userId=${encodeURIComponent(user._id)}`);
                     const bookings = await res.json();
@@ -43,8 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error("Failed to load bookings:", err);
                     bookingList.innerHTML = "<li>Error loading sessions.</li>";
                 }
-            })();
-        }
+            }
+
+            // Show Edit Profile Button for Tutors
+            const tutorControls = document.getElementById("tutor-controls");
+            if (tutorControls && user.role === "tutor") {
+                tutorControls.style.display = "block";
+            }
+        })();
     }
 
     // === Redirect Message on Login ===
