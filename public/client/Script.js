@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Upcoming Sessions
+        // Requested Sessions
         const bookingList = document.getElementById("booking-list");
         if (bookingList) {
             (async () => {
@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             const li = document.createElement("li");
                             li.innerHTML = `
                                 <strong>With:</strong> ${who}<br>
+                                ${user.role === "tutor"
+                                    ? `<strong>Student Email:</strong> ${b.studentId.email}<br>`
+                                    : ``}
                                 <strong>Date:</strong> ${dateStr}<br>
                                 <strong>Note:</strong> ${b.message}
                             `;
@@ -176,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.innerHTML = `
                     <h3>${tutor.name}</h3>
                     <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                    <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+                    <p><strong>Bio:</strong> ${tutorBIO || "No bio provided."}</p>
                     <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
                     <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
                 `;
