@@ -1,9 +1,9 @@
+// server/server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const fs = require('fs');
 
 dotenv.config();
 
@@ -12,12 +12,12 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS - Allow all for now (can lock down later)
+// CORS (allow all for now to avoid frontend issues)
 app.use(cors());
 
 // MongoDB Connect
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log(' MongoDB connected'))
+  .then(() => console.log('✅ MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // API Routes
@@ -29,23 +29,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// Static Files (Frontend)
-const frontendPath = path.join(__dirname, '../client');
-app.use(express.static(frontendPath));
+// Serve static files
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
 
-// Static Serve Handler
+// Fallback: SPA routing support
 app.get('*', (req, res) => {
-  const requestedPath = path.join(frontendPath, req.path);
-  if (fs.existsSync(requestedPath)) {
-    res.sendFile(requestedPath);
-  } else {
-    res.sendFile(path.join(frontendPath, 'index.html')); // <-- Fix here
-  }
+  res.sendFile(path.join(publicPath, 'client', 'index.html'));
 });
 
-
-// Start Server
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
