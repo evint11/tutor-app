@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs'); // for checking file existence
 
+
 dotenv.config();
 
 const app = express();
@@ -34,7 +35,8 @@ app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 // Static Files
-const frontendPath = path.join(__dirname, '..', 'client');
+const frontendPath = path.join(__dirname, 'client');
+
 app.use(express.static(frontendPath));
 
 // Serve only existing static files correctly
