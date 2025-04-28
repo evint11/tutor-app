@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 
 // CORS
-const allowedOrigins = ['http://localhost:5500', 'http://127.0.0.1:5500', 'https://tutor-app-p909.onrender.com'];
+const allowedOrigins = ['http://localhost:5500', 'http://127.0.0.1:5500'];
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
@@ -32,14 +32,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// Serve static files from client folder
+// Serve static frontend
 const frontendPath = path.join(__dirname, '..', 'client');
 app.use(express.static(frontendPath));
 
-// Serve ONLY unknown routes to index.html (AFTER static files)
+// ONLY for non-API routes, send index.html
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    res.status(404).json({ error: 'API route not found' });
+  const requestedPath = path.join(frontendPath, req.path);
+  
+  if (requestedPath.endsWith('.js') || requestedPath.endsWith('.css') || requestedPath.endsWith('.html')) {
+    res.sendFile(requestedPath);
   } else {
     res.sendFile(path.join(frontendPath, 'index.html'));
   }
