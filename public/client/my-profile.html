@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <title>My Profile - TutorConnect</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <header>
     <h1>My Profile</h1>
     <nav>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="tutors.html">Browse Tutors</a>
-      <a href="login.html" onclick="localStorage.clear()">Logout</a>
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/tutors.html">Browse Tutors</a>
+      <a href="/login.html" onclick="localStorage.clear()">Logout</a>
     </nav>
   </header>
 
@@ -38,40 +38,48 @@
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user || user.role !== "tutor") {
         alert("Access denied.");
-        window.location.href = "login.html";
+        window.location.href = "/login.html";
         return;
       }
 
       // Prefill form with tutor data
-      const res = await fetch(`http://localhost:3000/api/tutors/${user._id}`);
-      const tutor = await res.json();
-      document.getElementById("bio").value = tutor.bio || "";
-      document.getElementById("availability").value = tutor.availability || "";
-      document.getElementById("subjects").value = tutor.subjects?.join(", ") || "";
+      try {
+        const res = await fetch(`/api/tutors/${user._id}`);
+        const tutor = await res.json();
+        document.getElementById("bio").value = tutor.bio || "";
+        document.getElementById("availability").value = tutor.availability || "";
+        document.getElementById("subjects").value = tutor.subjects?.join(", ") || "";
+      } catch (err) {
+        console.error("Failed to load tutor data:", err);
+      }
 
       // Submit updated data
       const form = document.getElementById("profileForm");
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const updatedTutor = {
           bio: document.getElementById("bio").value,
           availability: document.getElementById("availability").value,
-          subjects: document.getElementById("subjects").value.split(",").map(s => s.trim())
+          subjects: document.getElementById("subjects").value.split(",").map(s => s.trim()),
         };
 
-        const res = await fetch(`http://localhost:3000/api/tutors/${user._id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(updatedTutor)
-        });
-
-        if (res.ok) {
-          alert("Profile updated successfully!");
-        } else {
-          alert("Something went wrong.");
+        try {
+          const res = await fetch(`/api/tutors/${user._id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(updatedTutor)
+          });
+          if (res.ok) {
+            alert("Profile updated successfully!");
+          } else {
+            const error = await res.json();
+            alert("Error updating profile: " + (error.error || res.statusText));
+          }
+        } catch (err) {
+          console.error("Error updating profile:", err);
+          alert("Something went wrong while updating profile.");
         }
       });
     });
