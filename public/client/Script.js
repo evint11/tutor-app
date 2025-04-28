@@ -24,35 +24,31 @@ document.addEventListener("DOMContentLoaded", () => {
         if (bookingList) {
             (async () => {
                 try {
-                    const response = await fetch(`/api/bookings?userId=${encodeURIComponent(user._id)}`);
-                    console.log("Booking fetch response:", response.status, response.statusText);
-                    if (!response.ok) {
-                        console.error("Booking fetch failed:", response.status, response.statusText);
-                        bookingList.innerHTML = "<li>Error loading sessions.</li>";
-                        return;
-                    }
-                    let bookings;
-                    try {
-                        bookings = await response.json();
-                    } catch (err) {
-                        console.error("Invalid JSON in bookings response:", err);
-                        bookingList.innerHTML = "<li>Error loading sessions.</li>";
-                        return;
-                    }
-                    if (!Array.isArray(bookings)) {
-                        console.error("Bookings data not an array:", bookings);
-                        bookingList.innerHTML = "<li>Error loading sessions.</li>";
-                        return;
-                    }
-                    console.log("Parsed bookings:", bookings);
+                    console.log("Fetching bookings for userId:", user._id);
+                    const res = await fetch(
+                        `/api/bookings?userId=${encodeURIComponent(user._id)}`
+                    );
+                    console.log("Booking fetch status:", res.status);
+                    const bookings = await res.json();
+                    console.log("Bookings data:", bookings);
+
+                    // Clear and render
                     bookingList.innerHTML = "";
-                    if (!bookings.length) {
+                    if (!bookings || bookings.length === 0) {
                         bookingList.innerHTML = "<li>No sessions yet.</li>";
                     } else {
                         bookings.forEach(b => {
-                            const li = document.createElement("li");
-                            const who = user._id === b.studentId._id ? b.tutorId.name : b.studentId.name;
+                            // Skip malformed entries
+                            if (!b.studentId || !b.tutorId) return;
+
+                            // Compare as strings
+                            const studentId = String(b.studentId._id);
+                            const who = user._id === studentId
+                                ? b.tutorId.name
+                                : b.studentId.name;
                             const dateStr = new Date(b.date).toLocaleString();
+
+                            const li = document.createElement("li");
                             li.innerHTML = `
                                 <strong>With:</strong> ${who}<br>
                                 <strong>Date:</strong> ${dateStr}<br>
@@ -62,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         });
                     }
                 } catch (err) {
-                    console.error("Failed to load bookings:", err);
+                    console.error("Error loading bookings:", err);
                     bookingList.innerHTML = "<li>Error loading sessions.</li>";
                 }
             })();
@@ -90,17 +86,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === Login Handler ===
     if (loginForm) {
-        loginForm.addEventListener("submit", async (e) => {
+        loginForm.addEventListener("submit", async e => {
             e.preventDefault();
             const creds = {
                 email: document.getElementById("email").value,
-                password: document.getElementById("password").value,
+                password: document.getElementById("password").value
             };
             try {
                 const res = await fetch("/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(creds),
+                    body: JSON.stringify(creds)
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -123,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         roleSelect.addEventListener("change", () => {
             extraFields.style.display = roleSelect.value === "tutor" ? "block" : "none";
         });
-        registerForm.addEventListener("submit", async (e) => {
+        registerForm.addEventListener("submit", async e => {
             e.preventDefault();
             const rawSubjects = document.getElementById("subjects").value;
             const newUser = {
@@ -133,13 +129,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 role: document.getElementById("role").value.toLowerCase(),
                 subjects: rawSubjects.split(",").map(s => s.trim()).filter(s => s),
                 bio: document.getElementById("bio")?.value || "",
-                availability: document.getElementById("availability")?.value || "",
+                availability: document.getElementById("availability")?.value || ""
             };
             try {
                 const res = await fetch("/api/auth/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newUser),
+                    body: JSON.stringify(newUser)
                 });
                 const data = await res.json();
                 if (res.ok) {
