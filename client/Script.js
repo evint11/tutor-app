@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bookingList) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) return;
-        fetch(`http://localhost:3000/api/bookings?userId=${user._id}`)
+        fetch(`/api/bookings?userId=${user._id}`)
             .then((res) => res.json())
             .then((bookings) => {
                 if (bookings.length === 0) {
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 password: document.getElementById("password").value,
             };
             try {
-                const res = await fetch("http://localhost:3000/api/auth/login", {
+                const res = await fetch("/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(user),
@@ -84,7 +84,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const roleSelect = document.getElementById("role");
         const extraFields = document.getElementById("tutor-extra-fields");
 
-        // Show tutor-only fields if role is "tutor"
         roleSelect.addEventListener("change", () => {
             extraFields.style.display = roleSelect.value === "tutor" ? "block" : "none";
         });
@@ -98,16 +97,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
                 role: document.getElementById("role").value.toLowerCase(),
-                subjects: rawSubjects
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter((s) => s.length > 0),
+                subjects: rawSubjects.split(",").map((s) => s.trim()).filter((s) => s.length > 0),
                 bio: document.getElementById("bio")?.value || "",
                 availability: document.getElementById("availability")?.value || "",
             };
 
             try {
-                const res = await fetch("http://localhost:3000/api/auth/register", {
+                const res = await fetch("/api/auth/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(user),
@@ -129,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // === Tutor Listing + Search ===
     async function loadTutors() {
         try {
-            const res = await fetch("http://localhost:3000/api/tutors");
+            const res = await fetch("/api/tutors");
             const tutors = await res.json();
             allTutors = tutors;
             renderTutors(tutors);
@@ -149,13 +145,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.classList.add("tutor-card");
             card.innerHTML = `
-            <h3>${tutor.name}</h3>
-            <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-            <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-            <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
-            <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
-        `;
-        
+                <h3>${tutor.name}</h3>
+                <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
+                <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+                <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
+                <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
+            `;
             tutorList.appendChild(card);
         });
     }
@@ -185,6 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     }
+
     const user = JSON.parse(localStorage.getItem("user"));
     if (user && user.role === "tutor") {
         const tutorControls = document.getElementById("tutor-controls");
@@ -192,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
             tutorControls.style.display = "block";
         }
     }
-    
+
     // === Logout Button ===
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
@@ -200,45 +196,43 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "login.html";
         });
     }
-// === Suggested Tutors Section on Dashboard ===
-if (currentPage.includes("dashboard.html")) {
-    fetch("http://localhost:3000/api/tutors")
-        .then((res) => res.json())
-        .then((tutors) => {
-            const suggestedList = document.getElementById("suggested-tutor-list");
-            if (!suggestedList) return;
 
-            // Shuffle tutors randomly
-            tutors.sort(() => Math.random() - 0.5);
+    // === Suggested Tutors Section on Dashboard ===
+    if (currentPage.includes("dashboard.html")) {
+        fetch("/api/tutors")
+            .then((res) => res.json())
+            .then((tutors) => {
+                const suggestedList = document.getElementById("suggested-tutor-list");
+                if (!suggestedList) return;
 
-            // Pick top 3 tutors to suggest
-            const suggestedTutors = tutors.slice(0, 3);
+                tutors.sort(() => Math.random() - 0.5);
+                const suggestedTutors = tutors.slice(0, 3);
 
-            suggestedTutors.forEach((tutor) => {
-                const card = document.createElement("div");
-                card.classList.add("tutor-card");
-                card.innerHTML = `
-                    <h3>${tutor.name}</h3>
-                    <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                    <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-                    <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
-                `;
-                suggestedList.appendChild(card);
+                suggestedTutors.forEach((tutor) => {
+                    const card = document.createElement("div");
+                    card.classList.add("tutor-card");
+                    card.innerHTML = `
+                        <h3>${tutor.name}</h3>
+                        <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
+                        <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+                        <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
+                    `;
+                    suggestedList.appendChild(card);
+                });
+            })
+            .catch((err) => {
+                console.error("Failed to load suggested tutors:", err);
             });
-        })
-        .catch((err) => {
-            console.error("Failed to load suggested tutors:", err);
-        });
-}
+    }
 
-    // === Tutor Profile Page Enhancements ===
+    // === Tutor Profile Page ===
     if (currentPage.includes("tutor-profile.html")) {
         const params = new URLSearchParams(window.location.search);
         const tutorId = params.get("id");
 
         if (!tutorId) return;
 
-        fetch(`http://localhost:3000/api/tutors/${tutorId}`)
+        fetch(`/api/tutors/${tutorId}`)
             .then((res) => res.json())
             .then((tutor) => {
                 document.getElementById("tutor-name").textContent = tutor.name;
