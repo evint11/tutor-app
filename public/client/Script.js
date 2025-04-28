@@ -24,19 +24,34 @@ document.addEventListener("DOMContentLoaded", () => {
         if (bookingList) {
             (async () => {
                 try {
-                    const res = await fetch(`/api/bookings?userId=${encodeURIComponent(user._id)}`);
-                    const bookings = await res.json();
-                    console.log("Fetched bookings:", bookings);
-
+                    const response = await fetch(`/api/bookings?userId=${encodeURIComponent(user._id)}`);
+                    console.log("Booking fetch response:", response.status, response.statusText);
+                    if (!response.ok) {
+                        console.error("Booking fetch failed:", response.status, response.statusText);
+                        bookingList.innerHTML = "<li>Error loading sessions.</li>";
+                        return;
+                    }
+                    let bookings;
+                    try {
+                        bookings = await response.json();
+                    } catch (err) {
+                        console.error("Invalid JSON in bookings response:", err);
+                        bookingList.innerHTML = "<li>Error loading sessions.</li>";
+                        return;
+                    }
+                    if (!Array.isArray(bookings)) {
+                        console.error("Bookings data not an array:", bookings);
+                        bookingList.innerHTML = "<li>Error loading sessions.</li>";
+                        return;
+                    }
+                    console.log("Parsed bookings:", bookings);
                     bookingList.innerHTML = "";
-                    if (bookings.length === 0) {
+                    if (!bookings.length) {
                         bookingList.innerHTML = "<li>No sessions yet.</li>";
                     } else {
                         bookings.forEach(b => {
                             const li = document.createElement("li");
-                            // Show who the session is with
                             const who = user._id === b.studentId._id ? b.tutorId.name : b.studentId.name;
-                            // Format date nicely
                             const dateStr = new Date(b.date).toLocaleString();
                             li.innerHTML = `
                                 <strong>With:</strong> ${who}<br>
@@ -55,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Show Edit Profile for tutors
         const tutorControls = document.getElementById("tutor-controls");
-        if (tutorControls && JSON.parse(localStorage.getItem("user")).role === "tutor") {
+        if (tutorControls && user.role === "tutor") {
             tutorControls.style.display = "block";
         }
     }
@@ -108,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
         roleSelect.addEventListener("change", () => {
             extraFields.style.display = roleSelect.value === "tutor" ? "block" : "none";
         });
-
         registerForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const rawSubjects = document.getElementById("subjects").value;
@@ -176,9 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
         loadTutors();
         searchInput?.addEventListener("input", () => {
             const query = searchInput.value.toLowerCase();
-            const filtered = allTutors.filter(t => {
-                const nameMatch = t.name.toLowerCase().includes(query);
-                const subjectMatch = t.subjects?.some(s => s.toLowerCase().includes(query));
+            const filtered = allTutors.filter(tutor => {
+                const nameMatch = tutor.name.toLowerCase().includes(query);
+                const subjectMatch = tutor.subjects?.some(s => s.toLowerCase().includes(query));
                 return nameMatch || subjectMatch;
             });
             renderTutors(filtered);
