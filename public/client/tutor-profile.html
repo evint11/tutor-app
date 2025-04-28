@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Tutor Profile - TutorConnect</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
     <header>
@@ -20,7 +20,7 @@
             <p><strong>Subjects:</strong> <span id="tutor-subjects"></span></p>
             <p><strong>Bio:</strong> <span id="tutor-bio"></span></p>
             <p><strong>Availability:</strong> <span id="tutor-availability"></span></p>
-            
+
             <h3>Request a Session</h3>
             <form id="bookingForm">
                 <label for="date">Date & Time:</label><br />
@@ -29,7 +29,6 @@
                 <textarea id="message" rows="4" required></textarea><br /><br />
                 <button type="submit">Send Request</button>
             </form>
-
         </div>
     </main>
 
@@ -37,51 +36,53 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const params = new URLSearchParams(window.location.search);
             const tutorId = params.get("id");
-
             if (!tutorId) return;
 
-            const tutorRes = await fetch(`http://localhost:3000/api/tutors/${tutorId}`);
-            const tutor = await tutorRes.json();
-            console.log("Fetched tutor:", tutor);
+            // Fetch tutor details from your API
+            try {
+                const tutorRes = await fetch(`/api/tutors/${tutorId}`);
+                const tutor = await tutorRes.json();
+                console.log("Fetched tutor:", tutor);
 
-            const emailLink = document.getElementById("tutor-email");
-            emailLink.textContent = tutor.email;
-            emailLink.href = `mailto:${tutor.email}`;
+                document.getElementById("tutor-name").textContent = tutor.name;
+                document.getElementById("tutor-email").textContent = tutor.email;
+                document.getElementById("tutor-email").href = `mailto:${tutor.email}`;
+                document.getElementById("tutor-subjects").textContent = tutor.subjects.join(", ");
+                document.getElementById("tutor-bio").textContent = tutor.bio;
+                document.getElementById("tutor-availability").textContent = tutor.availability;
+            } catch (err) {
+                console.error("Failed to fetch tutor:", err);
+            }
 
-            document.getElementById("tutor-name").textContent = tutor.name;
-            document.getElementById("tutor-subjects").textContent = tutor.subjects.join(", ");
-
+            // Handle booking form submission
             const bookingForm = document.getElementById("bookingForm");
             bookingForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
-                const user = JSON.parse(localStorage.getItem("user"));
-                if (!user) {
-                    alert("You must be logged in to book a session.");
-                    return;
-                }
-
                 const booking = {
-                    studentId: user._id,
-                    tutorId: tutor._id,
+                    tutorId,
                     date: document.getElementById("date").value,
-                    message: document.getElementById("message").value,
+                    message: document.getElementById("message").value
                 };
 
-                const res = await fetch("http://localhost:3000/api/bookings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(booking),
-                });
-
-                if (res.ok) {
-                    alert("Session request sent!");
-                    bookingForm.reset();
-                } else {
-                    alert("Error sending request.");
+                try {
+                    const res = await fetch("/api/bookings", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(booking),
+                    });
+                    if (res.ok) {
+                        alert("Session request sent!");
+                        bookingForm.reset();
+                    } else {
+                        const errorData = await res.json();
+                        alert("Error sending request: " + (errorData.error || res.statusText));
+                    }
+                } catch (err) {
+                    console.error("Error sending booking:", err);
+                    alert("Something went wrong while requesting a session.");
                 }
             });
         });
     </script>
-
 </body>
 </html>
