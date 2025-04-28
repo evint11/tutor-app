@@ -30,7 +30,7 @@ app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 // Static Files (Frontend)
-const frontendPath = path.join(__dirname, '../public');
+const frontendPath = path.join(__dirname, '../client');
 app.use(express.static(frontendPath));
 
 // Static Serve Handler
