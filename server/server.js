@@ -1,4 +1,5 @@
-// server.js
+// server/server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -13,40 +14,48 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS (Allow both local dev and deployed app)
+// CORS - allow localhost for development, allow all for production
 const allowedOrigins = [
   'http://localhost:5500',
-  'http://127.0.0.1:5500',
-  'https://tutor-app-p909.onrender.com'  // <--- ADD your deployed URL here
+  'http://127.0.0.1:5500'
 ];
+
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // allow all in production (for now)
+    }
+  },
   credentials: true
 }));
 
-// MongoDB Connect
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ MongoDB connected'))
+.catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // API Routes
 const authRoutes = require('./routes/auth');
 const tutorRoutes = require('./routes/tutors');
 const bookingRoutes = require('./routes/bookings');
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// Serve Frontend (static)
-const frontendPath = path.join(__dirname, 'client');   // <--- fixed path
+// Serve static files (Frontend)
+const frontendPath = path.join(__dirname, '../client');
 app.use(express.static(frontendPath));
 
-// Correctly serve static files or fallback to index.html
+// Serve index.html for any unknown routes
 app.get('*', (req, res) => {
   const requestedPath = path.join(frontendPath, req.path);
-  if (fs.existsSync(requestedPath)) {
+  if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isFile()) {
     res.sendFile(requestedPath);
   } else {
     res.sendFile(path.join(frontendPath, 'index.html'));
