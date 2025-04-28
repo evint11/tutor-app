@@ -11,35 +11,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage = window.location.pathname;
     let allTutors = [];
 
-    // === Dashboard Protection ===
+    // === Dashboard Protection & Booking List ===
     if (currentPage.includes("dashboard.html")) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
             window.location.href = "/login.html?redirect=dashboard";
+            return;
         }
-    }
 
-    // === Booking List on Dashboard ===
-    const bookingList = document.getElementById("booking-list");
-    if (bookingList) {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user) return;
-        fetch(`/api/bookings?userId=${user._id}`)
-            .then(res => res.json())
-            .then(bookings => {
-                bookingList.innerHTML = "";
-                if (bookings.length === 0) {
-                    bookingList.innerHTML = "<li>No sessions yet.</li>";
-                    return;
+        // Booking List
+        const bookingList = document.getElementById("booking-list");
+        if (bookingList) {
+            (async () => {
+                try {
+                    const res = await fetch(`/api/bookings?userId=${encodeURIComponent(user._id)}`);
+                    const bookings = await res.json();
+                    console.log("Fetched bookings:", bookings);
+                    bookingList.innerHTML = "";
+                    if (!bookings.length) {
+                        bookingList.innerHTML = "<li>No sessions yet.</li>";
+                    } else {
+                        bookings.forEach(b => {
+                            const li = document.createElement("li");
+                            const who = user._id === b.studentId._id ? b.tutorId.name : b.studentId.name;
+                            const dateStr = new Date(b.date).toLocaleString();
+                            li.innerHTML = `<strong>With:</strong> ${who} <strong>Date:</strong> ${dateStr}<br><strong>Note:</strong> ${b.message}`;
+                            bookingList.appendChild(li);
+                        });
+                    }
+                } catch (err) {
+                    console.error("Failed to load bookings:", err);
+                    bookingList.innerHTML = "<li>Error loading sessions.</li>";
                 }
-                bookings.forEach(b => {
-                    const li = document.createElement("li");
-                    const who = user._id === b.studentId._id ? b.tutorId.name : b.studentId.name;
-                    li.innerHTML = `<strong>With:</strong> ${who} <strong>Date:</strong> ${b.date} <br><strong>Note:</strong> ${b.message}<br><br>`;
-                    bookingList.appendChild(li);
-                });
-            })
-            .catch(err => console.error("Failed to load bookings:", err));
+            })();
+        }
     }
 
     // === Redirect Message on Login ===
@@ -59,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const user = {
+            const userCreds = {
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
             };
@@ -67,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const res = await fetch("/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(user),
+                    body: JSON.stringify(userCreds),
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -95,12 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
         registerForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const rawSubjects = document.getElementById("subjects").value;
-            const user = {
+            const newUser = {
                 name: document.getElementById("name").value,
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
                 role: document.getElementById("role").value.toLowerCase(),
-                subjects: rawSubjects.split(",").map(s => s.trim()).filter(s => s.length > 0),
+                subjects: rawSubjects.split(",").map(s => s.trim()).filter(s => s),
                 bio: document.getElementById("bio")?.value || "",
                 availability: document.getElementById("availability")?.value || "",
             };
@@ -108,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const res = await fetch("/api/auth/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(user),
+                    body: JSON.stringify(newUser),
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -118,46 +123,58 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert("Error: " + data.error);
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Registration error:", err);
                 alert("Something went wrong during registration.");
             }
         });
     }
 
     // === Tutor Listing + Search ===
-    async function loadTutors() {
-        try {
-            const res = await fetch("/api/tutors");
-            const tutors = await res.json();
-            allTutors = tutors;
-            renderTutors(tutors);
-        } catch (err) {
-            console.error("Failed to load tutors:", err);
-            tutorList.innerHTML = "<p>Error loading tutors.</p>";
+    if (tutorList) {
+        async function loadTutors() {
+            try {
+                const res = await fetch("/api/tutors");
+                const tutors = await res.json();
+                allTutors = tutors;
+                renderTutors(tutors);
+            } catch (err) {
+                console.error("Failed to load tutors:", err);
+                tutorList.innerHTML = "<p>Error loading tutors.</p>";
+            }
         }
-    }
 
-    function renderTutors(tutors) {
-        tutorList.innerHTML = "";
-        if (tutors.length === 0) {
-            tutorList.innerHTML = "<p>No tutors found.</p>";
-            return;
+        function renderTutors(tutors) {
+            tutorList.innerHTML = "";
+            if (tutors.length === 0) {
+                tutorList.innerHTML = "<p>No tutors found.</p>";
+                return;
+            }
+            tutors.forEach(tutor => {
+                const card = document.createElement("div");
+                card.classList.add("tutor-card");
+                card.innerHTML = `
+                    <h3>${tutor.name}</h3>
+                    <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
+                    <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+                    <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
+                    <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
+                `;
+                tutorList.appendChild(card);
+            });
         }
-        tutors.forEach(tutor => {
-            const card = document.createElement("div");
-            card.classList.add("tutor-card");
-            card.innerHTML = `
-                <h3>${tutor.name}</h3>
-                <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-                <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
-                <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
-            `;
-            tutorList.appendChild(card);
+
+        loadTutors();
+
+        searchInput?.addEventListener("input", () => {
+            const query = searchInput.value.toLowerCase();
+            const filtered = allTutors.filter(tutor => {
+                const nameMatch = tutor.name.toLowerCase().includes(query);
+                const subjectMatch = tutor.subjects?.some(s => s.toLowerCase().includes(query));
+                return nameMatch || subjectMatch;
+            });
+            renderTutors(filtered);
         });
     }
-
-    if (tutorList) loadTutors();
 
     // === Dashboard Greeting ===
     if (welcomeMessage) {
@@ -165,9 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (user) {
             welcomeMessage.textContent = `Welcome, ${user.name}!`;
             const roleText = document.getElementById("user-role");
-            if (roleText) {
-                roleText.textContent = `You are logged in as a ${user.role}.`;
-            }
+            if (roleText) roleText.textContent = `You are logged in as a ${user.role}.`;
         }
     }
 
@@ -179,31 +194,30 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // === Suggested Tutors Section on Dashboard ===
+    // === Suggested Tutors Section ===
     const suggestedList = document.getElementById("suggested-tutor-list");
     if (suggestedList) {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (user) {
-            fetch("/api/tutors")
-                .then(res => res.json())
-                .then(tutors => {
-                    // exclude current user if tutor
-                    const filtered = tutors.filter(t => t._id !== user._id);
-                    const suggestions = filtered.slice(0, 5);
-                    suggestions.forEach(tutor => {
-                        const card = document.createElement("div");
-                        card.classList.add("tutor-card");
-                        card.innerHTML = `
-                            <h3>${tutor.name}</h3>
-                            <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                            <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-                            <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
-                            <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
-                        `;
-                        suggestedList.appendChild(card);
-                    });
-                })
-                .catch(err => console.error("Failed to load suggested tutors:", err));
-        }
+        (async () => {
+            try {
+                const res = await fetch("/api/tutors");
+                const tutors = await res.json();
+                tutors.filter(t => t._id !== JSON.parse(localStorage.getItem("user"))._id)
+                      .slice(0,5)
+                      .forEach(tutor => {
+                          const card = document.createElement("div");
+                          card.classList.add("tutor-card");
+                          card.innerHTML = `
+                              <h3>${tutor.name}</h3>
+                              <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
+                              <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+                              <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
+                              <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
+                          `;
+                          suggestedList.appendChild(card);
+                      });
+            } catch (err) {
+                console.error("Failed to load suggested tutors:", err);
+            }
+        })();
     }
 });
