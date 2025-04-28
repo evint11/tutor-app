@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Routes
+// API Routes
 const authRoutes = require('./routes/auth');
 const tutorRoutes = require('./routes/tutors');
 const bookingRoutes = require('./routes/bookings');
@@ -32,22 +32,20 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
 
-// Serve static frontend
+// Static Files
 const frontendPath = path.join(__dirname, '..', 'client');
 app.use(express.static(frontendPath));
 
-// ONLY for non-API routes, send index.html
+// Special: Only handle SPA routes
 app.get('*', (req, res) => {
-  const requestedPath = path.join(frontendPath, req.path);
-  
-  if (requestedPath.endsWith('.js') || requestedPath.endsWith('.css') || requestedPath.endsWith('.html')) {
-    res.sendFile(requestedPath);
+  if (req.originalUrl.includes('.') || req.originalUrl.startsWith('/api/')) {
+    res.status(404).send('Not found');
   } else {
     res.sendFile(path.join(frontendPath, 'index.html'));
   }
 });
 
-// Start server
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
