@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs'); // for checking file existence
 
 dotenv.config();
 
@@ -36,14 +37,16 @@ app.use('/api/bookings', bookingRoutes);
 const frontendPath = path.join(__dirname, '..', 'client');
 app.use(express.static(frontendPath));
 
-// Special: Only handle SPA routes
+// Serve only existing static files correctly
 app.get('*', (req, res) => {
-  if (req.originalUrl.includes('.') || req.originalUrl.startsWith('/api/')) {
-    res.status(404).send('Not found');
+  const requestedPath = path.join(frontendPath, req.path);
+  if (fs.existsSync(requestedPath)) {
+    res.sendFile(requestedPath);
   } else {
     res.sendFile(path.join(frontendPath, 'index.html'));
   }
 });
+
 
 // Start Server
 const PORT = process.env.PORT || 3000;
