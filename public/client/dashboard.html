@@ -1,24 +1,23 @@
-﻿<!-- dashboard.html -->
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <title>Dashboard - TutorConnect</title>
-    <link rel="stylesheet" href="/client/styles.css">
+    <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
     <header>
         <h1>Dashboard</h1>
         <nav>
-            <a href="index.html">Home</a>
-            <a href="tutors.html">Browse Tutors</a>
-            <a href="login.html" onclick="localStorage.clear()">Logout</a>
+            <a href="/index.html">Home</a>
+            <a href="/tutors.html">Browse Tutors</a>
+            <a href="/login.html" onclick="localStorage.clear()">Logout</a>
         </nav>
     </header>
 
     <main>
         <div class="dashboard-container">
-    
+
             <div class="dashboard-top">
                 <!-- Left side (Upcoming sessions & Edit button) -->
                 <div class="dashboard-left">
@@ -27,7 +26,7 @@
                         <li>No sessions yet.</li>
                     </ul>
                     <div id="tutor-controls" style="display: none; margin-top: 1rem;">
-                        <a href="my-profile.html">
+                        <a href="/my-profile.html">
                             <button class="success-btn">Edit My Profile</button>
                         </a>
                     </div>
@@ -41,7 +40,7 @@
                     <p>TutorConnect is supported by <strong>volunteer tutors</strong> who offer their time and knowledge to help students thrive.</p>
     
                     <div style="margin-top: 2rem;">
-                        <a href="tutors.html"><button class="primary-btn">View Tutors</button></a>
+                        <a href="/tutors.html"><button class="primary-btn">View Tutors</button></a>
                         <button id="logout-btn" class="danger-btn">Log Out</button>
                     </div>
                 </div>
@@ -56,8 +55,6 @@
         </div>
     </main>
     
-
     <script src="/Script.js"></script>
-
 </body>
 </html>
