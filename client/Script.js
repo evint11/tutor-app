@@ -1,3 +1,5 @@
+// script.js (UPDATED)
+
 document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
@@ -9,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage = window.location.pathname;
     let allTutors = [];
 
-    // === Dashboard Protection ===
+    // Dashboard protection
     if (currentPage.includes("dashboard.html")) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
@@ -17,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // === Booking List on Dashboard ===
+    // Dashboard bookings
     const bookingList = document.getElementById("booking-list");
     if (bookingList) {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -38,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // === Redirect Message on Login ===
+    // Redirect message for login
     if (currentPage.includes("login.html")) {
         const params = new URLSearchParams(window.location.search);
         if (params.get("redirect") === "dashboard") {
@@ -51,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // === Login Handler ===
+    // Login form
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -79,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // === Register Handler ===
+    // Register form
     if (registerForm) {
         const roleSelect = document.getElementById("role");
         const extraFields = document.getElementById("tutor-extra-fields");
@@ -97,7 +99,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
                 role: document.getElementById("role").value.toLowerCase(),
-                subjects: rawSubjects.split(",").map((s) => s.trim()).filter((s) => s.length > 0),
+                subjects: rawSubjects
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter((s) => s.length > 0),
                 bio: document.getElementById("bio")?.value || "",
                 availability: document.getElementById("availability")?.value || "",
             };
@@ -122,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // === Tutor Listing + Search ===
+    // Load tutors
     async function loadTutors() {
         try {
             const res = await fetch("/api/tutors");
@@ -145,11 +150,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("div");
             card.classList.add("tutor-card");
             card.innerHTML = `
-                <h3>${tutor.name}</h3>
-                <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-                <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
-                <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
+            <h3>${tutor.name}</h3>
+            <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
+            <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
+            <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
+            <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
             `;
             tutorList.appendChild(card);
         });
@@ -169,7 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (tutorList) loadTutors();
 
-    // === Dashboard Greeting ===
     if (welcomeMessage) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (user) {
@@ -181,66 +185,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user && user.role === "tutor") {
-        const tutorControls = document.getElementById("tutor-controls");
-        if (tutorControls) {
-            tutorControls.style.display = "block";
-        }
-    }
-
-    // === Logout Button ===
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             localStorage.removeItem("user");
             window.location.href = "login.html";
         });
-    }
-
-    // === Suggested Tutors Section on Dashboard ===
-    if (currentPage.includes("dashboard.html")) {
-        fetch("/api/tutors")
-            .then((res) => res.json())
-            .then((tutors) => {
-                const suggestedList = document.getElementById("suggested-tutor-list");
-                if (!suggestedList) return;
-
-                tutors.sort(() => Math.random() - 0.5);
-                const suggestedTutors = tutors.slice(0, 3);
-
-                suggestedTutors.forEach((tutor) => {
-                    const card = document.createElement("div");
-                    card.classList.add("tutor-card");
-                    card.innerHTML = `
-                        <h3>${tutor.name}</h3>
-                        <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                        <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
-                        <a href="tutor-profile.html?id=${tutor._id}">View Profile</a>
-                    `;
-                    suggestedList.appendChild(card);
-                });
-            })
-            .catch((err) => {
-                console.error("Failed to load suggested tutors:", err);
-            });
-    }
-
-    // === Tutor Profile Page ===
-    if (currentPage.includes("tutor-profile.html")) {
-        const params = new URLSearchParams(window.location.search);
-        const tutorId = params.get("id");
-
-        if (!tutorId) return;
-
-        fetch(`/api/tutors/${tutorId}`)
-            .then((res) => res.json())
-            .then((tutor) => {
-                document.getElementById("tutor-name").textContent = tutor.name;
-                document.getElementById("tutor-email").textContent = tutor.email;
-                document.getElementById("tutor-email").href = `mailto:${tutor.email}`;
-                document.getElementById("tutor-subjects").textContent = tutor.subjects?.join(", ") || "N/A";
-                document.getElementById("tutor-bio").textContent = tutor.bio || "No bio provided.";
-                document.getElementById("tutor-availability").textContent = tutor.availability || "Not specified.";
-            });
     }
 });
