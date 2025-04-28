@@ -30,9 +30,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // API Routes
-const authRoutes = require('./server/routes/auth');    // <-- update if your routes are inside /server
-const tutorRoutes = require('./server/routes/tutors');
-const bookingRoutes = require('./server/routes/bookings');
+const authRoutes = require('./routes/auth');
+const tutorRoutes = require('./routes/tutors');
+const bookingRoutes = require('./routes/bookings');
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tutors', tutorRoutes);
