@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.innerHTML = `
                     <h3>${tutor.name}</h3>
                     <p><strong>Subjects:</strong> ${tutor.subjects?.join(", ") || "N/A"}</p>
-                    <p><strong>Bio:</strong> ${tutorBIO || "No bio provided."}</p>
+                    <p><strong>Bio:</strong> ${tutor.bio || "No bio provided."}</p>
                     <p><strong>Availability:</strong> ${tutor.availability || "Not specified."}</p>
                     <a href="/tutor-profile.html?id=${tutor._id}">View Profile</a>
                 `;
