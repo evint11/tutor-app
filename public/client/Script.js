@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage = window.location.pathname;
     let allTutors = [];
 
-    // === Dashboard Protection & Booking List & Edit Profile ===
+    // === Dashboard Logic ===
     if (currentPage.includes("dashboard.html")) {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user) {
@@ -19,23 +19,30 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Booking List
+        // Upcoming Sessions
         const bookingList = document.getElementById("booking-list");
-        (async () => {
-            if (bookingList) {
+        if (bookingList) {
+            (async () => {
                 try {
                     const res = await fetch(`/api/bookings?userId=${encodeURIComponent(user._id)}`);
                     const bookings = await res.json();
                     console.log("Fetched bookings:", bookings);
+
                     bookingList.innerHTML = "";
-                    if (!bookings.length) {
+                    if (bookings.length === 0) {
                         bookingList.innerHTML = "<li>No sessions yet.</li>";
                     } else {
                         bookings.forEach(b => {
                             const li = document.createElement("li");
+                            // Show who the session is with
                             const who = user._id === b.studentId._id ? b.tutorId.name : b.studentId.name;
+                            // Format date nicely
                             const dateStr = new Date(b.date).toLocaleString();
-                            li.innerHTML = `<strong>With:</strong> ${who} <strong>Date:</strong> ${dateStr}<br><strong>Note:</strong> ${b.message}`;
+                            li.innerHTML = `
+                                <strong>With:</strong> ${who}<br>
+                                <strong>Date:</strong> ${dateStr}<br>
+                                <strong>Note:</strong> ${b.message}
+                            `;
                             bookingList.appendChild(li);
                         });
                     }
@@ -43,14 +50,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.error("Failed to load bookings:", err);
                     bookingList.innerHTML = "<li>Error loading sessions.</li>";
                 }
-            }
+            })();
+        }
 
-            // Show Edit Profile Button for Tutors
-            const tutorControls = document.getElementById("tutor-controls");
-            if (tutorControls && user.role === "tutor") {
-                tutorControls.style.display = "block";
-            }
-        })();
+        // Show Edit Profile for tutors
+        const tutorControls = document.getElementById("tutor-controls");
+        if (tutorControls && JSON.parse(localStorage.getItem("user")).role === "tutor") {
+            tutorControls.style.display = "block";
+        }
     }
 
     // === Redirect Message on Login ===
@@ -70,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const userCreds = {
+            const creds = {
                 email: document.getElementById("email").value,
                 password: document.getElementById("password").value,
             };
@@ -78,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const res = await fetch("/api/auth/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(userCreds),
+                    body: JSON.stringify(creds),
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -98,7 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (registerForm) {
         const roleSelect = document.getElementById("role");
         const extraFields = document.getElementById("tutor-extra-fields");
-
         roleSelect.addEventListener("change", () => {
             extraFields.style.display = roleSelect.value === "tutor" ? "block" : "none";
         });
@@ -148,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 tutorList.innerHTML = "<p>Error loading tutors.</p>";
             }
         }
-
         function renderTutors(tutors) {
             tutorList.innerHTML = "";
             if (tutors.length === 0) {
@@ -168,14 +173,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 tutorList.appendChild(card);
             });
         }
-
         loadTutors();
-
         searchInput?.addEventListener("input", () => {
             const query = searchInput.value.toLowerCase();
-            const filtered = allTutors.filter(tutor => {
-                const nameMatch = tutor.name.toLowerCase().includes(query);
-                const subjectMatch = tutor.subjects?.some(s => s.toLowerCase().includes(query));
+            const filtered = allTutors.filter(t => {
+                const nameMatch = t.name.toLowerCase().includes(query);
+                const subjectMatch = t.subjects?.some(s => s.toLowerCase().includes(query));
                 return nameMatch || subjectMatch;
             });
             renderTutors(filtered);
