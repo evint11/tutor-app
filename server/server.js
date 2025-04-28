@@ -17,7 +17,7 @@ app.use(cors());
 
 // MongoDB Connect
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected'))
+  .then(() => console.log(' MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // API Routes
@@ -39,9 +39,10 @@ app.get('*', (req, res) => {
   if (fs.existsSync(requestedPath)) {
     res.sendFile(requestedPath);
   } else {
-    res.sendFile(path.join(frontendPath, 'client', 'index.html'));
+    res.sendFile(path.join(frontendPath, 'index.html')); // <-- Fix here
   }
 });
+
 
 // Start Server
 const PORT = process.env.PORT || 3000;
